@@ -18,6 +18,7 @@ from metriculous.evaluators.classification.classification_figures_bokeh import (
     _bokeh_output_histogram,
     _bokeh_precision_recall_curve,
     _bokeh_roc_curve,
+    _bokeh_lod_loq_linregression,
 )
 from metriculous.evaluators.classification.classification_utils import (
     ClassificationData,
@@ -235,6 +236,19 @@ class ClassificationEvaluator(
                     _bokeh_output_histogram(
                         y_true=y_true,
                         y_pred=y_pred,
+                        class_names=class_names,
+                        title_rows=[model_name, "Unweighted Class Distribution"],
+                        sample_weights=None,
+                        x_label_rotation=self.class_label_rotation_x,
+                    ),
+                )
+            )
+            lazy_figures.append(
+                (
+                    "Mosaic of the samples with a given dilution",
+                    _bokeh_lod_loq_linregression(
+                        y_probability=y_pred_proba,
+                        x_dilution=y_pred,
                         class_names=class_names,
                         title_rows=[model_name, "Unweighted Class Distribution"],
                         sample_weights=None,

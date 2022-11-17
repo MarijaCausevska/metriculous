@@ -3,6 +3,7 @@ from typing import Callable, List, Mapping, Optional, Sequence, Union
 import numpy as np
 from assertpy import assert_that
 from bokeh import plotting
+from bokeh.models import Slope
 from bokeh.models import ColumnDataSource, HoverTool, LinearColorMapper
 from bokeh.plotting import Figure
 from sklearn import metrics as sklmetrics
@@ -643,3 +644,108 @@ def _faster_accuracy(
     assert y_true.ndim == 1
     assert y_pred.ndim == 1
     return np.average(y_true == y_pred, weights=sample_weights)
+
+
+def _bokeh_lod_loq_linregression(
+    #y_true: np.ndarray,
+    y_probability: np.ndarray,
+    x_dilution: np.ndarray,
+    class_names: Sequence[str],
+    title_rows: Sequence[str],
+    x_label_rotation: Union[str, float] = "horizontal",
+    y_label_rotation: Union[str, float] = "vertical",
+) -> Callable[[], Figure]:
+    """Linear regression ans scatter plot that calculated limit of detection and limit of quantity.
+    Args:
+        y_true:
+            1d integer array indicating the reference labels.
+        y_pred:
+            1d integer array indicating the predictions.
+        class_names:
+            Sequence of strings corresponding to the classes.
+        title_rows:
+            Sequence of strings to be used for the chart title.
+        x_label_rotation:
+            Rotation of the x-axis class name labels.
+        y_label_rotation:
+            Rotation of the y-axis class name labels.
+    Returns:
+        A callable that returns a fresh bokeh figure, limit of detection and limit of quantity each time it is called a
+    """
+    # determine best fit line with numpy.polyfit. It minimizes the squared error
+    par = np.polyfit(x_dilution, y_probability, 1, full=True)
+    slope=par[0][0]
+    intercept=par[0][1]
+    print(slope)
+    print(intercept)
+    y_predicted = [slope*i + intercept  for i in x_dilution]
+    lod = 3.3*(intercept/slope)
+    print("Limit of detection ", lod)
+    loq = 10*(intercept/slope)
+    print("Limit of quantification ", loq)
+    
+    def figure() -> Figure:
+        if len(x_dilution) != len(y_probability):
+            raise ValueError("y_probability and x_dilution must have the same length!")
+
+        p = plotting.figure(
+            x_range=(-1,100),
+            y_range=(-1,100),
+            plot_height=500,
+            plot_width=500,
+            tools=TOOLS,
+            toolbar_location=TOOLBAR_LOCATION,
+            match_aspect=True,
+        )
+
+        #def noise() -> np.ndarray:
+        #    return (np.random.beta(1, 1, size=len(y_true)) - 0.5) * 0.6
+
+        p.scatter(
+            x=x_dilution ,
+            y=y_probability ,
+            size=scatter_plot_circle_size(
+                num_points=len(x_dilution),
+                biggest=6.0,
+                smallest=3.0,
+                use_smallest_when_num_points_at_least=5000,
+            ),
+            color=DARK_BLUE,
+            fill_alpha=SCATTER_CIRCLES_FILL_ALPHA,
+            line_alpha=SCATTER_CIRCLES_LINE_ALPHA,
+        )
+        slope = Slope(gradient=slope, y_intercept=intercept,
+              line_color='orange', line_dash='dashed', line_width=4)
+        
+        p.add_layout(slope)
+        add_title_rows(p, title_rows)
+        apply_default_style(p)
+
+        p.xaxis.axis_label = "Dilution"
+        p.yaxis.axis_label = "Probability"
+
+        #arange = np.arange(len(class_names))
+
+        #p.xaxis.ticker = arange
+        #p.yaxis.ticker = arange
+
+        #p.xaxis.major_label_overrides = {i: name for i, name in enumerate(class_names)}
+        #p.yaxis.major_label_overrides = {i: name for i, name in enumerate(class_names)}
+
+        #p.xaxis.major_label_orientation = x_label_rotation
+        #p.yaxis.major_label_orientation = y_label_rotation
+
+        # grid between classes, not at classes
+        #p.xgrid.ticker = arange[0:-1] + 0.5
+        #p.ygrid.ticker = arange[0:-1] + 0.5
+
+        #p.xgrid.grid_line_width = 3
+        #p.ygrid.grid_line_width = 3
+
+        # prevent panning to empty regions
+        #p.x_range.bounds = (-0.5, -0.5 + len(class_names))
+        #p.y_range.bounds = (-0.5, -0.5 + len(class_names))
+
+        return p
+
+    return figure, lod, loq

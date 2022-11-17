@@ -221,3 +221,108 @@ def top_n_accuracy(
 
     top_n_acc = np.average(is_target_in_top_n_predictions, weights=sample_weights)
     return top_n_acc
+
+def positive_likelihood_ratio(
+    target_ints: np.ndarray, positive_probas: np.ndarray, at_sensitivity: float
+) -> Tuple[Optional[float], Optional[float]]:
+    """Positive likelihood ratio was assessed as TPR/FPR
+    Compute positive likelihood ratio at a sensitivity.
+    Sensitivity = true positive rate
+                = true positives / positives
+                = recall
+                = P(prediction positive | class positive)
+    Args:
+        target_ints: 1d array of binary class labels, zeros and ones
+        positive_probas: 1d array of probabilities of class 1
+        at_sensitivity: sensitivity at which to compute positive likelihood ratio
+    Returns:
+        (float): positive likelihood ratio at returned sensitivity
+        (float): sensitivity closest to input sensitivity
+    """
+    assert 0 < at_sensitivity < 1
+
+    if len(set(target_ints)) < 2:
+        return None, None
+
+    fprs, sensitivities, _ = roc_curve(target_ints, positive_probas)
+    specificities = 1.0 - fprs
+   
+    # last and first entries are not interesting
+
+    if len(specificities) > 2:
+        specificities = specificities[1:-1]
+        sensitivities = sensitivities[1:-1]
+        
+    np.seterr(invalid="ignore")
+    positive_likelihood_ratio = sensitivities/(1.0 - specificities)#fprs
+    print("Positive ratio")
+    print(positive_likelihood_ratio)
+    # find point on curve that is closest to desired sensitivity
+    index = np.argmin(np.abs(sensitivities - at_sensitivity))
+    
+    return positive_likelihood_ratio[index], sensitivities[index]
+
+def negative_likelihood_ratio(
+    target_ints: np.ndarray, positive_probas: np.ndarray, at_specificity: float
+) -> Tuple[Optional[float], Optional[float]]:
+    """Compute negative likelihood ratio at a given specificity.
+    Sensitivity = true positive rate
+                = true positives / positives
+                = recall
+                = P(prediction positive | class positive)
+    Specificity = true negative rate
+                = true negatives / negatives
+                = 1 - false positive rate
+                = P(prediction negative | class negative)
+    Args:
+        target_ints: 1d array of binary class labels, zeros and ones
+        positive_probas: 1d array of probabilities of class 1
+        at_specificity: specificity at which to compute negative likelihood ratio
+    Returns:
+        (float): negative likelihood ratio at returned specificity
+        (float): specificity closest to input specificity
+    """
+    assert 0 < at_specificity < 1
+
+    if len(set(target_ints)) < 2:
+        return None, None
+
+    fprs, sensitivities, _ = roc_curve(target_ints, positive_probas)
+    specificities = 1.0 - fprs
+    
+    
+    # last and first entries are not interesting (0 or 1)
+    if len(specificities) > 2: 
+        specificities = specificities[1:-1]
+        sensitivities = sensitivities[1:-1]
+
+    np.seterr(invalid="ignore")
+    negative_likelihood_ratio = (1.0 - sensitivities)/specificities
+    print("Negative ratio")
+    print(negative_likelihood_ratio)
+    
+    # find point on curve that is closest to desired at_specificity
+    index = np.argmin(np.abs(specificities - at_specificity))
+    return negative_likelihood_ratio[index], specificities[index]
+
+def diagnostic_odds_ratio(
+    target_ints: np.ndarray, positive_probas: np.ndarray, at_positive_likelihood_ratio: float, at_negative_likelihood_ratio: float
+) -> Tuple[Optional[float], Optional[float]]:
+    """Compute diagnostic odds ratio at a given positive and negative likelihood ratio.
+    Args:
+        target_ints: 1d array of binary class labels, zeros and ones
+        positive_probas: 1d array of probabilities of class 1
+        at_positive_likelihood_ratio: positive likelihood ratio at which to compute diagnostic odds ratio
+        at_negative_likelihood_ratio: negative likelihood ratio at which to compute diagnostic odds ratio
+        
+    Returns:
+        (float): diagnostic odds ratio
+    """
+
+    if len(set(target_ints)) < 2:
+        return None, None
+
+    np.seterr(invalid="ignore")
+    dor = at_positive_likelihood_ratio/at_negative_likelihood_ratio
+    
+    return dor

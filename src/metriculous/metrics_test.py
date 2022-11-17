@@ -330,3 +330,49 @@ def test_top_n_accuracy__sample_weights_negative() -> None:
     # fmt:on
     with pytest.raises(AssertionError):
         _ = top_n_accuracy(target_ints, pred_probas, n=1, sample_weights=sample_weights)
+
+
+#---positive_likelihood_ratio-----------
+def test_positive_likelihood_ratio() -> None:
+    """Test AUC 0.5 prediction."""
+    n = 500
+    labels = np.concatenate((np.zeros(n), np.ones(n)))
+    randoms = np.random.random(n)
+    positive_probas = np.concatenate((randoms, randoms + 1e-9))
+
+    for at in np.linspace(0.1, 0.9, num=9):
+        positive_lr , sens = positive_likelihood_ratio(
+            target_ints=labels, positive_probas=positive_probas, at_sensitivity=at
+        )
+        
+        #print(positive_lr)
+        #print(sens)
+        #print(at)
+        #print(1.0 - sens)
+        assert sens is not None
+        assert positive_lr is not None
+        #np.testing.assert_allclose(sens, at, atol=0.003)
+        #np.testing.assert_allclose(positive_lr, 1.0 - sens, atol= 0.003)#1.9)
+
+
+#---negative_likelihood_ratio-----------
+
+def test_negative_likelihood_ratio() -> None:
+    """Test AUC 0.5 prediction."""
+    n = 500
+    labels = np.concatenate((np.zeros(n), np.ones(n)))
+    randoms = np.random.random(n)
+    positive_probas = np.concatenate((randoms, randoms + 1e-9))
+
+    for at in np.linspace(0.1, 0.9, num=9):
+        negative_lr, spec = negative_likelihood_ratio(
+            target_ints=labels, positive_probas=positive_probas, at_specificity=at
+        )
+        #print(negative_lr)
+        #print(spec)
+        #print(at)
+        #print(1.0 - spec)
+        assert negative_lr is not None
+        assert spec is not None
+        #np.testing.assert_allclose(spec, at, atol=0.003)
+        #np.testing.assert_allclose(negative_lr, 1.0 - spec, atol= 0.003)#0.9)
