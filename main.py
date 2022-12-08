@@ -219,6 +219,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             model_predictions=model_predictions_array,
             model_names= list(class_names_dic.keys()),
             class_names=class_names,
+            dilution=dilution_argument,
             filter_quantities= filter_quantity_list,
             filter_figures= filter_figure_list,
             one_vs_all_figures=True,
@@ -229,6 +230,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             model_predictions=model_predictions_array,
             model_names= list(class_names_dic.keys()),
             class_names=class_names,
+            dilution=dilution_argument,
             filter_figures= filter_figure_list,
             one_vs_all_figures=True,
             ).save_html("comparison1.html").display()
@@ -238,6 +240,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             model_predictions=model_predictions_array,
             model_names= list(class_names_dic.keys()),
             class_names=class_names,
+            dilution=dilution_argument,
             filter_quantities= filter_quantity_list,
             one_vs_all_figures=True,
             ).save_html("comparison1.html").display()
@@ -247,6 +250,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             model_predictions=model_predictions_array,
             model_names= list(class_names_dic.keys()),
             class_names=class_names,
+            dilution= dilution_argument,
             one_vs_all_figures=True,
             ).save_html("comparison1.html").display()
         
