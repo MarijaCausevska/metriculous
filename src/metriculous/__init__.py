@@ -35,6 +35,7 @@ __all__ = [
 def compare_classifiers(
     ground_truth: ClassificationGroundTruth,
     model_predictions: Sequence[ClassificationPrediction],
+    dilution: Optional[Sequence[int]] = None, #added
     model_names: Optional[Sequence[str]] = None,
     sample_weights: Optional[Sequence[float]] = None,
     class_names: Optional[Sequence[str]] = None,
@@ -52,6 +53,7 @@ def compare_classifiers(
     return compare(
         evaluator=ClassificationEvaluator(
             class_names=class_names,
+            dilution = dilution, #added
             one_vs_all_quantities=one_vs_all_quantities,
             one_vs_all_figures=one_vs_all_figures,
             top_n_accuracies=top_n_accuracies,

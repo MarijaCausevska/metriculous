@@ -31,10 +31,10 @@ from metriculous.utilities import sample_weights_simulating_class_distribution
 
 ClassificationGroundTruth = Union[np.ndarray, Sequence[Sequence[float]], Sequence[int]]
 ClassificationPrediction = Union[np.ndarray, Sequence[Sequence[float]]]
-
+#Dilution = Union[np.ndarray, Sequence[Sequence[float]], Sequence[int]]
 
 class ClassificationEvaluator(
-    Evaluator[ClassificationGroundTruth, ClassificationPrediction]
+    Evaluator[ClassificationGroundTruth, ClassificationPrediction]#, Dilution]
 ):
     """
     Default Evaluator implementation that serves well for most classification problems.
@@ -44,6 +44,7 @@ class ClassificationEvaluator(
     def __init__(
         self,
         class_names: Optional[Sequence[str]] = None,
+        dilution: Optional[Sequence[int]] = None, #added
         one_vs_all_quantities: bool = True,
         one_vs_all_figures: bool = False,
         top_n_accuracies: Sequence[int] = (),
@@ -93,7 +94,7 @@ class ClassificationEvaluator(
         self.class_names = class_names
         self.one_vs_all_quantities = one_vs_all_quantities
         self.one_vs_all_figures = one_vs_all_figures
-
+        self.dilution = dilution #added
         self.top_n_accuracies = top_n_accuracies
         assert all(isinstance(val, int) for val in self.top_n_accuracies)
         assert all(val >= 1 for val in self.top_n_accuracies)
@@ -201,6 +202,7 @@ class ClassificationEvaluator(
     def _lazy_figures(
         self,
         model_name: str,
+        dilution: np.ndarray,
         data: ClassificationData,
         maybe_sample_weights: Optional[np.ndarray],
         class_names: Sequence[str],
@@ -211,8 +213,11 @@ class ClassificationEvaluator(
         y_true = data.target.argmaxes
         y_true_one_hot = data.target.argmaxes_one_hot
 
+
         y_pred_proba = data.pred.proba_matrix
         y_pred = data.pred.argmaxes
+
+        dilution = dilution
 
         # --- Histogram of predicted and ground truth classes ---
         if maybe_sample_weights is None:
@@ -248,9 +253,9 @@ class ClassificationEvaluator(
                     "Mosaic of the samples with a given dilution",
                     _bokeh_lod_loq_linregression(
                         y_probability=y_pred_proba,
-                        x_dilution=y_pred,
+                        x_dilution=dilution,
                         class_names=class_names,
-                        title_rows=[model_name, "Unweighted Class Distribution"],
+                        title_rows=[model_name, "Mosaic of the samples"],
                         sample_weights=None,
                         x_label_rotation=self.class_label_rotation_x,
                     ),

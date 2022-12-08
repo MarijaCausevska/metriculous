@@ -9,6 +9,10 @@ from metriculous.metrics import (
     sensitivity_at_x_specificity,
     specificity_at_x_sensitivity,
     top_n_accuracy,
+    positive_likelihood_ratio,
+    negative_likelihood_ratio,
+    diagnostic_odds_ratio,
+
 )
 
 
@@ -368,11 +372,37 @@ def test_negative_likelihood_ratio() -> None:
         negative_lr, spec = negative_likelihood_ratio(
             target_ints=labels, positive_probas=positive_probas, at_specificity=at
         )
-        #print(negative_lr)
-        #print(spec)
-        #print(at)
-        #print(1.0 - spec)
+     
         assert negative_lr is not None
         assert spec is not None
-        #np.testing.assert_allclose(spec, at, atol=0.003)
-        #np.testing.assert_allclose(negative_lr, 1.0 - spec, atol= 0.003)#0.9)
+        
+
+def test_diagnostic_odds_ratio() -> None:
+    
+    n = 500
+    labels = np.concatenate((np.zeros(n), np.ones(n)))
+    randoms = np.random.random(n)
+    positive_probas = np.concatenate((randoms, randoms + 1e-9))
+
+    for at in np.linspace(0.1, 0.9, num=9):
+        negative_lr, spec = negative_likelihood_ratio(
+            target_ints=labels, positive_probas=positive_probas, at_specificity=at
+        )
+ 
+        assert negative_lr is not None
+        assert spec is not None
+
+        
+        positive_lr , sens = positive_likelihood_ratio(
+            target_ints=labels, positive_probas=positive_probas, at_sensitivity=at
+        )
+        
+     
+        assert sens is not None
+        assert positive_lr is not None
+ 
+
+        dor = diagnostic_odds_ratio(
+         target_ints = labels, positive_probas =  positive_probas, at_positive_likelihood_ratio = positive_lr , at_negative_likelihood_ratio =  negative_lr)
+        print("Diagnostic odds ratio: ")
+        print(dor)
