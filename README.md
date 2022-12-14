@@ -3,7 +3,7 @@
 Measure, visualize, and compare machine learning model performance without the usual boilerplate.
 Breaking API improvements to be expected.
 
-# Comparing Classification Models
+# Compare Classification Models
 ## Documentation for using config.py script and creating a configuration file
 
 *  With **config.py** script we create the configuration (INI) file. Essentially, the file consist of sections, each of which contains keys with values. There are three sections that we have created:
@@ -25,8 +25,8 @@ After running the **config.py** script we get the **configuration.ini** file wit
 
 ## Documentation for using main.py script
 
-* When we run the **main.py** script on the command line we enter the configuration file (**configurations.ini**) which contains quantities and figures that we have selected to be included and excluded from the calculation and representation, and the thresholds for each class of the classification model. The rest of the arguments that we read from command line are model files in **.csv** format. The model files (.csv files) contain informations about: dilution, ground truth and predictions for each class. The first two coulumns (dilution and ground truth) have equal values for each model file. Dilution coulumn has numeric values or it could be empty, if a sample has an empty dilution value, then we set it to 1. Ground truth column contains a name of the class, that must match with the class names in the heder of the model files and later we do a label encoding for the class names.
-The values of the class predictions have to be between 0.0 and 1.0.
+* When we run the **main.py** script on the command line we enter the configuration file (**configurations.ini**) which contains quantities and figures that we have selected to be included and excluded from the calculation and representation, and the thresholds for each class of the classification model. The rest of the arguments that we read from command line are model files in **.csv** format. The model files (.csv files) contain informations about: dilution, ground truth and predictions for each class. The first two coulumns (dilution and ground truth) must have equal values in each model file for each instance (sample or patient). Dilution coulumn has numeric values or it could be empty, if a sample has an empty dilution value, then we set it to 1. Ground truth column contains a name of the class, that must match with the class names in the header of the model files and later we do a label encoding for the class names in order to encode them in a numeric value.
+The values of the class predictions have to be between 0.0 and 1.0. All model files have the same class names.
 
 * _Running main.py script_
 
