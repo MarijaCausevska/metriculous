@@ -61,6 +61,8 @@ class ClassificationEvaluator(
         Args:
             class_names:
                 Optional, names of the classes.
+            dilution:
+                Optional, array of dilutions.
             one_vs_all_quantities:
                 If `True` show quantities like "ROC AUC Class_i vs Rest" for all i.
             one_vs_all_figures:
@@ -202,7 +204,7 @@ class ClassificationEvaluator(
     def _lazy_figures(
         self,
         model_name: str,
-        dilution: np.ndarray,
+        dilution: np.ndarray, #Sequence[int]
         data: ClassificationData,
         maybe_sample_weights: Optional[np.ndarray],
         class_names: Sequence[str],
@@ -250,7 +252,7 @@ class ClassificationEvaluator(
             )
             lazy_figures.append(
                 (
-                    "Mosaic of the samples with a given dilution",
+                    "Mosaic of the samples for a given dilution",
                     _bokeh_lod_loq_linregression(
                         y_probability=y_pred_proba,
                         x_dilution=dilution,

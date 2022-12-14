@@ -657,10 +657,10 @@ def _bokeh_lod_loq_linregression(
 ) -> Callable[[], Figure]:
     """Linear regression ans scatter plot that calculated limit of detection and limit of quantity.
     Args:
-        y_true:
-            1d integer array indicating the reference labels.
-        y_pred:
+        y_probability:
             1d integer array indicating the predictions.
+        x_dilution:
+            1d integer array indicating the dilutions.
         class_names:
             Sequence of strings corresponding to the classes.
         title_rows:
