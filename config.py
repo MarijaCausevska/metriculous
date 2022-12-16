@@ -36,9 +36,8 @@ config_file.set("figures", "PR", "yes")
 config_file.set("figures", "Mosaic of the samples with a given dilution", "no")
 
 config_file.add_section("threshold")
-config_file.set("threshold", "Class1_prediction", "0.7")
-config_file.set("threshold", "Class2_prediction", "0.6")
-config_file.set("threshold", "Class3_prediction", "0.5")
+config_file.set("threshold", "model_1", "0.7")
+config_file.set("threshold", "model_2", "0.6")
 
 
 

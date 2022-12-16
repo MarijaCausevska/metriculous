@@ -22,26 +22,20 @@ print("Total number of command line arguments passed: ", n_arguments)
 num_models = n_arguments - 2
 print("Total number of models to compare: ", num_models)
 
-#config_file = open(config_file, "r")
-#content = config_file.read()
-#print("Content of the config file are:\n")
-#print(content)
 
 #The second argument is the config file
 #We open,read the config file and convert each key-value pairs in the dictionary 
 config_file = sys.argv[1]
 dictionary = {}
-#cfg = ConfigParser()
-#cfg.read(config_file)
+
 
 
 cfg = configparser.RawConfigParser()
 cfg.optionxform = str
-#cfg.optionxform = lambda option: option.upper()
-cfg.read(config_file)
-#cfg.defaults()
 
-#config_file.flush()
+cfg.read(config_file)
+
+
 for sections in cfg.sections():
     print(sections)
     dictionary[sections] = {}
@@ -88,10 +82,6 @@ for i in range(2,n_arguments,1):
         print("Class names: ")
         print(class_names)
 
-        #class_names_num = [idx for idx, (k, v) in enumerate(groupby(class_names), 0) for i in v]
-        #print("Class names to numbers: ")
-        #print(class_names_num)
-        
         a = le.fit(class_names) #do label encoding of the classes
         print("Labeled class names: ")
         print(a)
@@ -133,16 +123,13 @@ for i in range(2,n_arguments,1):
             
             
             predictions.append(model_predictions)
-            #models[model_name] = model_predictions
-            #predictions = np.append(model_predictions)
+ 
             print("Predictions: ")
             print(predictions)
             models[model_name] = predictions
             print(models)
     
-    #ground_truth_array = [eval(i) for i in ground_truth_array]
-    #ground_truth_array = [idx for idx, (k, v) in enumerate(groupby(ground_truth_array), 0) for i in v]
-    #print(ground_truth_array)
+
     ground_truth_array = list(le.transform(ground_truth_array))
     print(ground_truth_array)
     ground_truth_dic[model_name] = ground_truth_array
@@ -168,6 +155,7 @@ for i in range(2,n_arguments,1):
 quantity_list = []
 figure_list = []
 threshold_dic = dict()
+threshold_list = []
 
 for sections in dictionary.keys():
     if sections == "quantity":
@@ -180,9 +168,12 @@ for sections in dictionary.keys():
                 figure_list.append(metric)
     elif sections == "threshold":
          for class_name, value in dictionary['threshold'].items():
-            threshold_dic[class_name] = value
+            #threshold_dic[class_name] = value 
+            threshold_list.append(value)
 
 
+
+threshold_list = [eval(i) for i in threshold_list]
 
 print("Quantities that have to be excluded: ")
 print(quantity_list)
@@ -190,8 +181,9 @@ print(quantity_list)
 print("Figures that have to be excluded: ")
 print(figure_list)
 
-print("Dictionary of thresholds for each class: ")
-print(threshold_dic)
+
+print("List of thresholds for each model: ")
+print(threshold_list)
 
 filter_quantity_list = lambda x: x not in quantity_list
 filter_figure_list = lambda x: x not in figure_list
@@ -210,9 +202,73 @@ model_predictions_array = []
 for i in range(num_models):
     model_predictions_array.append(list(models.values())[i])
 
+print(model_predictions_array)
+print(len(model_predictions_array))
+print(models)
+
+def filter_inconclusive(model_thresholds, models_dic): 
+    """
+    Filter the inconclusive samples (patients). Compare the probabilities of each class prediction with the model threshold.
+    If all the predictions for a given sample are lower than model threshold, then that sample is inconclusive and we do not take
+    that sample in the calculations.
+    
+    Args:
+    
+    model_thresholds: a list of thresholds for each model (one threshold per model)
+    models_dic: a dictionary of models predictions 
+    
+    Return:
+    
+    models_dic_final: a model dictionary with removed inconclusive samples for each model
+    inconclusive_samples: a dictionary with inconclusive samples (where a model threshold is above the max probability of its predictions)     for each model  
+    
+    """
+    models_dic_final = dict()
+    true_positive_dict = dict()
+    inconclusive_samples = dict()
+    length = len(model_thresholds)
+    for t in range(length):
+        predictions_final = []
+        predictions_inconclusive = []
+        key = "model_" + str(t + 1)
+        print(models_dic[key])
+        for predictions in models_dic[key]:
+            #preds = []
+            print(predictions)
+            print("\n")
+            max_probability = max(predictions)
+            max_index = predictions.index(max_probability)
+            print(max_probability)
+            if model_thresholds[t] >= max_probability:
+                print("Inconclusive samples: ")
+                print(predictions)
+                predictions_inconclusive.append(predictions)
+                inconclusive_samples[key] = predictions_inconclusive
+            else:
+                predictions_final.append(predictions)
+                models_dic_final[key] = predictions_final
+            
+    
+    return models_dic_final, inconclusive_samples
+            
+        
+        
+models_dic_final, inconclusive_samples = filter_inconclusive(threshold_list, models)
+
+print(models_dic_final)
+print("\n")
+print(inconclusive_samples)
+
+        
+model_predictions_array = []
+
+for i in range(num_models):
+    model_predictions_array.append(list(models_dic_final.values())[i])
+
+print(model_predictions_array)
 print(len(model_predictions_array))
 
-if (len(threshold_dic.keys()) == len(class_names)):
+if (len(threshold_list) == num_models):
     if(len(quantity_list)!=0 and len(figure_list)!=0):
         metriculous.compare_classifiers(
             ground_truth=ground_truth_argument,
@@ -223,7 +279,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             filter_quantities= filter_quantity_list,
             filter_figures= filter_figure_list,
             one_vs_all_figures=True,
-            ).save_html("comparison1.html").display()
+            ).save_html("comparison100.html").display()
     elif (len(quantity_list)==0 and len(figure_list)!=0):
         metriculous.compare_classifiers(
             ground_truth=ground_truth_argument,
@@ -233,7 +289,7 @@ if (len(threshold_dic.keys()) == len(class_names)):
             dilution=dilution_argument,
             filter_figures= filter_figure_list,
             one_vs_all_figures=True,
-            ).save_html("comparison1.html").display()
+            ).save_html("comparison100.html").display()
     elif (len(quantity_list)!=0 and len(figure_list)==0):
         metriculous.compare_classifiers(
             ground_truth=ground_truth_argument,
@@ -243,21 +299,23 @@ if (len(threshold_dic.keys()) == len(class_names)):
             dilution=dilution_argument,
             filter_quantities= filter_quantity_list,
             one_vs_all_figures=True,
-            ).save_html("comparison1.html").display()
+            ).save_html("comparison100.html").display()
     else:
         metriculous.compare_classifiers(
             ground_truth=ground_truth_argument,
             model_predictions=model_predictions_array,
             model_names= list(class_names_dic.keys()),
             class_names=class_names,
-            dilution= dilution_argument,
+            dilution=dilution_argument,
             one_vs_all_figures=True,
-            ).save_html("comparison1.html").display()
+            ).save_html("comparison100.html").display()
+else:
+    print("The number of thresholds in the configuration file is not compatible with the total number of  model files.")
+
+
+
         
         
        
-else:
-    print("Number of set thresholds for the classes is not compatible with the number of classes in the model files.")
-
 
 
