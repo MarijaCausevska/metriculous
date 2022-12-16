@@ -1,0 +1,7 @@
+Dilution,Ground_truth1,Class1_prediction,Class2_prediction,Class3_prediction
+,Class2_prediction,0.1,0.5,0.4
+0.45,Class1_prediction,0.7,0.2,0.1
+0.2,Class2_prediction,0.15,0.75,0.1
+0.55,Class3_prediction,0.15,0.15,0.7
+,Class1_prediction,0.8,0.15,0.05
+0.6,Class3_prediction,0.15,0.2,0.65
